@@ -1,0 +1,44 @@
+{% extends "dashboard/_base.html" %}
+
+{% block title %}Batch report{% endblock %}
+
+{% block content %}
+
+  <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 flex-shrink-0">
+    <a href="/batches/" class="text-gray-400 hover:text-gray-600 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-base font-semibold text-gray-800">Batch report</h1>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-2xl mx-auto">
+      {% include "dashboard/_batch_status.html" %}
+    </div>
+  </div>
+
+  <!-- Skipped items modal -->
+  <dialog id="errors-modal"
+    class="rounded-2xl shadow-2xl p-0 w-full max-w-2xl border-0 backdrop:bg-gray-900/50">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white rounded-t-2xl">
+      <h3 class="font-semibold text-gray-900 text-base">Skipped items</h3>
+      <button
+        onclick="document.getElementById('errors-modal').close()"
+        class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+        {% include "dashboard/_icon.html" with name="close" icon_class="w-4 h-4" %}
+      </button>
+    </div>
+    <div id="errors-modal-body" class="px-6 py-5 max-h-[60vh] overflow-y-auto">
+      <!-- HTMX loads the skipped-items table here -->
+    </div>
+  </dialog>
+
+  <script>
+    document.getElementById('errors-modal').addEventListener('click', function(e) {
+      if (e.target === this) this.close();
+    });
+  </script>
+
+{% endblock %}

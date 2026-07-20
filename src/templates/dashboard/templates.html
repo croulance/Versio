@@ -1,0 +1,48 @@
+{% extends "dashboard/_base.html" %}
+{% load dashboard_extras %}
+
+{% block title %}Template Editor{% endblock %}
+
+{% block content %}
+
+  <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+    <h1 class="text-base font-semibold text-gray-800">Template Editor</h1>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-6xl mx-auto">
+
+      <div id="editor-panel" class="mb-8">
+        {% if active %}
+          {% include "dashboard/_editor.html" with template=active %}
+        {% endif %}
+      </div>
+
+      {% include "dashboard/_template_list.html" %}
+
+    </div>
+  </div>
+
+  <!-- New template modal -->
+  <dialog id="template-modal"
+    class="rounded-2xl shadow-2xl p-0 w-full max-w-lg border-0 backdrop:bg-gray-900/50">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white rounded-t-2xl">
+      <h3 class="font-semibold text-gray-900 text-base">New template</h3>
+      <button
+        onclick="document.getElementById('template-modal').close()"
+        class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+        {% include "dashboard/_icon.html" with name="close" icon_class="w-4 h-4" %}
+      </button>
+    </div>
+    <div id="template-modal-body" class="px-6 py-5">
+      <!-- HTMX loads form here -->
+    </div>
+  </dialog>
+
+  <script>
+    document.getElementById('template-modal').addEventListener('click', function(e) {
+      if (e.target === this) this.close();
+    });
+  </script>
+
+{% endblock %}

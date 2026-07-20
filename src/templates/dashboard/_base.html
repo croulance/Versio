@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versio — {% block title %}{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+  <style>
+    /* Brief "Saved" confirmation shown next to autosave fields (name, source
+       path, metadata). Replays on every htmx swap since the element is
+       re-rendered fresh each time. */
+    .saved-flash { animation: saved-flash-fade 1.6s ease-out forwards; }
+    @keyframes saved-flash-fade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+    /* Toast shown on HX-Trigger: upstreamError (see UpstreamErrorMiddleware) */
+    #upstream-error-toast {
+      position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 50;
+      display: none;
+    }
+    #upstream-error-toast.visible { display: block; animation: toast-fade 4s ease-out forwards; }
+    @keyframes toast-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex">
+
+  <div id="upstream-error-toast"
+    class="bg-red-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg">
+    Something went wrong — please try again.
+  </div>
+
+  <!-- Left sidebar: primary navigation + page-specific items to administer -->
+  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <div class="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+      <span class="text-indigo-600 font-bold text-lg tracking-tight">Versio</span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-3 flex flex-col min-h-0">
+      <div class="px-3 space-y-0.5 flex-shrink-0">
+        <a href="/batches/"
+          class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
+            {% if active_nav == 'batches' %}bg-indigo-50 text-indigo-700{% else %}text-gray-500 hover:bg-gray-50 hover:text-gray-700{% endif %}">
+          Batches
+        </a>
+        <a href="/templates/"
+          class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
+            {% if active_nav == 'templates' %}bg-indigo-50 text-indigo-700{% else %}text-gray-500 hover:bg-gray-50 hover:text-gray-700{% endif %}">
+          Templates
+        </a>
+      </div>
+
+      {% block sidebar_extra %}{% endblock %}
+    </nav>
+
+    <div class="px-4 py-3 border-t border-gray-100 flex-shrink-0 space-y-2">
+      <div class="flex items-center gap-2 text-xs text-gray-500">
+        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span class="truncate">{{ request.supplier.email }}</span>
+      </div>
+      <form method="post" action="/logout/">
+        {% csrf_token %}
+        <button type="submit"
+          class="w-full text-left text-xs font-medium text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50">
+          Sign out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Page content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    document.body.addEventListener('upstreamError', () => {
+      const toast = document.getElementById('upstream-error-toast');
+      toast.classList.remove('visible');
+      void toast.offsetWidth; // restart the fade animation on repeat triggers
+      toast.classList.add('visible');
+    });
+  </script>
+</body>
+</html>

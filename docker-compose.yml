@@ -1,0 +1,142 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: versio
+      POSTGRES_USER: versio
+      POSTGRES_PASSWORD: versio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: versio
+      RABBITMQ_DEFAULT_PASS: versio
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: versio
+      MINIO_ROOT_PASSWORD: versio123
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      sh -c "
+        sleep 3 &&
+        mc alias set local http://minio:9000 versio versio123 &&
+        mc mb --ignore-existing local/versio-inputs &&
+        echo 'Bucket ready'
+      "
+
+  api:
+    build: .
+    command: gunicorn versio.wsgi:application --bind 0.0.0.0:8000 --workers 8 --timeout 180
+    volumes:
+      - ./src:/app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.dev
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - minio
+
+  worker:
+    build: .
+    command: celery -A versio worker -Q chunks -c 16 --prefetch-multiplier 1 -l info
+    volumes:
+      - ./src:/app
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.dev
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - minio
+
+  worker-default:
+    build: .
+    command: celery -A versio worker -Q default -c 4 -l info
+    volumes:
+      - ./src:/app
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.dev
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - minio
+
+  auth:
+    build: .
+    command: gunicorn versio.wsgi_auth:application --bind 0.0.0.0:8002 --workers 4 --timeout 180
+    volumes:
+      - ./src:/app
+    ports:
+      - "8002:8002"
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.auth
+    depends_on:
+      - db
+      - redis
+
+  dashboard:
+    build: .
+    command: gunicorn versio.wsgi_dashboard:application --bind 0.0.0.0:8001 --workers 4 --timeout 180
+    volumes:
+      - ./src:/app
+    ports:
+      - "8001:8001"
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.dashboard
+      - TRANSFORMATION_API_URL=http://api:8000
+      - AUTH_API_URL=http://auth:8002
+    depends_on:
+      - api
+      - auth
+
+  shell:
+    build: .
+    command: sleep infinity
+    volumes:
+      - ./src:/app
+      - ./tests:/tests
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=versio.settings.dev
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - minio
+
+volumes:
+  postgres_data:
+  minio_data:

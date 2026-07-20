@@ -1,0 +1,9 @@
+<tbody id="source-fields-body" class="divide-y divide-gray-100">
+  {% for field in fields %}
+    {% include "dashboard/_source_field_row.html" with field=field template_id=template_id editable=editable depth=0 %}
+  {% empty %}
+    <tr id="no-fields-row">
+      <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-400 italic">No source fields yet.</td>
+    </tr>
+  {% endfor %}
+</tbody>

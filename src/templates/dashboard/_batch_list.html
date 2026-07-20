@@ -1,0 +1,84 @@
+<div id="batch-list-wrap" class="bg-white rounded-xl border border-gray-200 shadow-sm">
+
+  <!-- Filter bar -->
+  <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+    <h2 class="text-sm font-semibold text-gray-700">Your batches</h2>
+    <form
+      hx-get="/batches/"
+      hx-target="#batch-list-wrap"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+      class="flex items-center gap-2">
+      <label class="text-xs text-gray-400">Status</label>
+      <input type="hidden" name="ordering" value="{{ ordering }}">
+      <select name="status"
+        hx-get="/batches/" hx-target="#batch-list-wrap" hx-swap="outerHTML" hx-push-url="true"
+        hx-trigger="change" hx-include="[name='ordering']"
+        class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700
+               focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+        <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+        <option value="PENDING" {% if status_filter == "PENDING" %}selected{% endif %}>Pending</option>
+        <option value="PROCESSING" {% if status_filter == "PROCESSING" %}selected{% endif %}>Processing</option>
+        <option value="PARTIAL" {% if status_filter == "PARTIAL" %}selected{% endif %}>Partial</option>
+        <option value="DONE" {% if status_filter == "DONE" %}selected{% endif %}>Done</option>
+        <option value="FAILED" {% if status_filter == "FAILED" %}selected{% endif %}>Failed</option>
+      </select>
+    </form>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-gray-50 border-b border-gray-200">
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch ID</th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="format" label="Format" base_url="/batches/" target="#batch-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="template_version" label="Version" base_url="/batches/" target="#batch-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="status" label="Status" base_url="/batches/" target="#batch-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Chunks</th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="created_at" label="Submitted" base_url="/batches/" target="#batch-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-56">Files</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for b in batches %}
+        {% include "dashboard/_batch_row.html" with b=b %}
+      {% empty %}
+        <tr>
+          <td colspan="8" class="px-4 py-6 text-center text-sm text-gray-400 italic">No batches submitted yet.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  {% if num_pages > 1 %}
+  <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+    <span>Page {{ page }} of {{ num_pages }} ({{ count }} total)</span>
+    <div class="flex items-center gap-2">
+      {% if page > 1 %}
+        <a class="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer font-medium text-indigo-600"
+          hx-get="/batches/?status={{ status_filter }}&ordering={{ ordering }}&page={{ page|add:"-1" }}"
+          hx-target="#batch-list-wrap" hx-swap="outerHTML" hx-push-url="true">Previous</a>
+      {% else %}
+        <span class="px-2 py-1 text-gray-300">Previous</span>
+      {% endif %}
+      {% if page < num_pages %}
+        <a class="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer font-medium text-indigo-600"
+          hx-get="/batches/?status={{ status_filter }}&ordering={{ ordering }}&page={{ page|add:"1" }}"
+          hx-target="#batch-list-wrap" hx-swap="outerHTML" hx-push-url="true">Next</a>
+      {% else %}
+        <span class="px-2 py-1 text-gray-300">Next</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>

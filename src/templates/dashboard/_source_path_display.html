@@ -1,0 +1,25 @@
+<div id="source-path-block">
+  <div class="flex items-center gap-3 flex-wrap">
+    {% if template.editable %}
+      <input
+        type="text" name="source_path" value="{{ template.source_path }}"
+        placeholder="e.g. data.items.item"
+        hx-post="/templates/{{ template.id }}/source-path/"
+        hx-trigger="change, keyup[key=='Enter']"
+        hx-target="#source-path-block"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        class="text-sm font-mono border-2 border-gray-300 rounded-lg px-3 py-2 w-96 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400">
+    {% else %}
+      <code class="text-sm bg-gray-100 px-3 py-2 rounded-lg text-gray-700 border border-gray-200">{{ template.source_path|default:"—" }}</code>
+    {% endif %}
+    {% if not template.source_path %}
+      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg">
+        {% include "dashboard/_icon.html" with name="warning" icon_class="w-4 h-4 flex-shrink-0" %}
+        Not set — batches will rely on auto-detection
+      </span>
+    {% endif %}
+    {% include "dashboard/_saved_flash.html" %}
+  </div>
+  {% include "dashboard/_field_error.html" %}
+</div>

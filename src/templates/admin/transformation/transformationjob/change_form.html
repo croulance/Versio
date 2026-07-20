@@ -1,0 +1,160 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block content %}
+{{ block.super }}
+
+{% with job=original %}
+{% if job %}
+<div style="margin-top:24px">
+
+  <!-- Source → Target summary -->
+  <h2 style="margin-bottom:8px">Transformation</h2>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+    <thead>
+      <tr style="background:#e8f0fe;text-align:left">
+        <th style="padding:10px;border:1px solid #ddd;width:40%">Source</th>
+        <th style="padding:10px;border:1px solid #ddd;width:40%">Target</th>
+        <th style="padding:10px;border:1px solid #ddd">Duration</th>
+        <th style="padding:10px;border:1px solid #ddd">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:10px;border:1px solid #ddd">
+          <div style="font-size:11px;color:#888;margin-bottom:2px">JSON batch — S3</div>
+          <code style="font-size:12px;word-break:break-all">{{ job.s3_path }}</code>
+        </td>
+        <td style="padding:10px;border:1px solid #ddd">
+          {% if job.output_s3_path %}
+          <div style="font-size:11px;color:#888;margin-bottom:2px">{{ job.format|upper }} — S3</div>
+          <code style="font-size:12px;word-break:break-all">{{ job.output_s3_path }}</code>
+          {% else %}
+          <span style="color:#888;font-style:italic">Not yet available</span>
+          {% endif %}
+        </td>
+        <td style="padding:10px;border:1px solid #ddd;white-space:nowrap">
+          {% if job.processing_duration %}
+            {{ job.processing_duration }}
+          {% else %}
+            <span style="color:#888">—</span>
+          {% endif %}
+        </td>
+        <td style="padding:10px;border:1px solid #ddd">
+          {% if job.output_s3_path %}
+          <a href="{% url 'admin:download-output' job.id %}"
+             style="display:inline-block;padding:5px 14px;background:#1a73e8;color:white;border-radius:4px;text-decoration:none;font-size:13px">
+            Download
+          </a>
+          {% else %}
+          <span style="color:#bbb;font-size:13px">Pending</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Job details -->
+  <h2 style="margin-bottom:8px">Details</h2>
+  <table class="form-table" style="width:auto;margin-bottom:24px">
+    <tr><th>Job ID</th><td><code>{{ job.id }}</code></td></tr>
+    <tr><th>Supplier</th><td>{{ job.supplier }}</td></tr>
+    <tr><th>Format</th><td>{{ job.format|upper }}</td></tr>
+    <tr><th>Status</th><td><strong>{{ job.status }}</strong></td></tr>
+    <tr><th>Progress</th><td>{{ job.processed_chunks }} / {{ job.total_chunks }} chunks</td></tr>
+    <tr><th>Submitted</th><td>{{ job.created_at }}</td></tr>
+    <tr><th>Processing started</th><td>{{ job.started_at|default:"—" }}</td></tr>
+    <tr><th>Completed</th><td>{{ job.completed_at|default:"—" }}</td></tr>
+  </table>
+
+  <!-- Failed chunks -->
+  {% if job.failed_chunks %}
+  <h2 style="margin-bottom:8px;color:#c62828">
+    Failed Chunks ({{ job.failed_chunks|length }})
+  </h2>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+    <thead>
+      <tr style="background:#f8d7da;text-align:left">
+        <th style="padding:8px;border:1px solid #ddd">Range</th>
+        <th style="padding:8px;border:1px solid #ddd">Error</th>
+        <th style="padding:8px;border:1px solid #ddd">Failed At</th>
+        <th style="padding:8px;border:1px solid #ddd">Retries</th>
+        <th style="padding:8px;border:1px solid #ddd">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for chunk in job.failed_chunks %}
+      <tr style="border:1px solid #ddd">
+        <td style="padding:8px;border:1px solid #ddd;font-family:monospace">
+          [{{ chunk.start }} : {{ chunk.end }}]
+        </td>
+        <td style="padding:8px;border:1px solid #ddd;color:#c62828;max-width:400px;word-break:break-word">
+          {{ chunk.error|default:"—" }}
+        </td>
+        <td style="padding:8px;border:1px solid #ddd">{{ chunk.failed_at|default:"—" }}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:center">{{ chunk.retry_count|default:0 }}</td>
+        <td style="padding:8px;border:1px solid #ddd">
+          <form method="post" action="{% url 'admin:retry-chunk' job.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="start" value="{{ chunk.start }}">
+            <input type="hidden" name="end" value="{{ chunk.end }}">
+            <button type="submit"
+              style="background:#1a73e8;color:white;border:none;padding:4px 12px;border-radius:4px;cursor:pointer">
+              Retry
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <form method="post" action="{% url 'admin:retry-chunk' job.id %}">
+      {% csrf_token %}
+      <button type="submit"
+        style="background:#c62828;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:13px">
+        Retry All Failed Chunks
+      </button>
+    </form>
+    <a href="{% url 'admin:submit-transform' %}"
+       style="display:inline-block;padding:8px 16px;background:#555;color:white;border-radius:4px;text-decoration:none">
+      ← Submit New Batch
+    </a>
+  </div>
+
+  {% elif job.status == "DONE" %}
+  <p style="color:#2e7d32;font-weight:bold">✓ All {{ job.total_chunks }} chunks processed successfully.</p>
+  <a href="{% url 'admin:submit-transform' %}"
+     style="display:inline-block;padding:8px 16px;background:#555;color:white;border-radius:4px;text-decoration:none">
+    ← Submit New Batch
+  </a>
+
+  {% else %}
+  <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:12px 16px;margin-bottom:16px">
+    <strong style="color:#856404">⚠ Chunks were not processed</strong>
+    <p style="margin:6px 0 0;color:#856404;font-size:13px">
+      {{ job.processed_chunks }} of {{ job.total_chunks }} chunks completed.
+      The remaining chunks may have been dropped (worker was down or restarting).
+      Use the button below to re-dispatch all chunk ranges from scratch.
+    </p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <form method="post" action="{% url 'admin:retry-chunk' job.id %}">
+      {% csrf_token %}
+      <button type="submit"
+        style="background:#e65100;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:13px">
+        Re-dispatch All Chunks
+      </button>
+    </form>
+    <a href="{% url 'admin:submit-transform' %}"
+       style="display:inline-block;padding:8px 16px;background:#555;color:white;border-radius:4px;text-decoration:none">
+      ← Submit New Batch
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}

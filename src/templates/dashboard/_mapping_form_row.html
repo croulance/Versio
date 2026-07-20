@@ -1,0 +1,85 @@
+<tr id="{% if m %}mapping-row-{{ m.id }}{% else %}mapping-add-row{% endif %}">
+  <td class="px-3 py-2">
+    <select
+      name="source_field_id"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+      {% for f in source_fields %}
+        <option value="{{ f.id }}"
+          {% if m and m.source_field.id == f.id %}selected{% endif %}>
+          {{ f.path }} ({{ f.field_type }})
+        </option>
+      {% endfor %}
+    </select>
+  </td>
+  <td class="px-3 py-2">
+    <input
+      type="text"
+      name="target_field"
+      value="{{ m.target_field|default:'' }}"
+      placeholder="target_key"
+      class="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+      required>
+  </td>
+  {% if template_format == "xlsx" %}
+    <td class="px-3 py-2">
+      <input
+        type="text"
+        name="sheet_name"
+        value="{{ m.sheet_name|default:'' }}"
+        placeholder="Sheet1"
+        title="Required for xlsx — which worksheet this column belongs to"
+        class="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+        required>
+    </td>
+  {% endif %}
+  <td class="px-3 py-2">
+    <select
+      name="handler_method"
+      class="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+      {% for h in handlers %}
+        <option value="{{ h }}" {% if m and m.handler_method == h %}selected{% endif %}>{{ h }}</option>
+      {% endfor %}
+    </select>
+  </td>
+  <td class="px-3 py-2">
+    <div class="flex items-center gap-1">
+      {% if m %}
+        <!-- Edit mode -->
+        <button
+          class="px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors"
+          hx-post="/templates/{{ template_id }}/mappings/{{ m.id }}/edit/"
+          hx-include="closest tr"
+          hx-target="#mapping-row-{{ m.id }}"
+          hx-swap="outerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+          Save
+        </button>
+        <button
+          class="px-2.5 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors"
+          hx-get="/templates/{{ template_id }}/mappings/{{ m.id }}/"
+          hx-target="#mapping-row-{{ m.id }}"
+          hx-swap="outerHTML">
+          Cancel
+        </button>
+      {% else %}
+        <!-- Add mode -->
+        <button
+          class="px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors"
+          hx-post="/templates/{{ template_id }}/mappings/add/"
+          hx-include="closest tr"
+          hx-target="closest tr"
+          hx-swap="outerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+          Add
+        </button>
+        <button
+          class="px-2.5 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors"
+          hx-get="/templates/{{ template_id }}/mappings/add/?cancel=1"
+          hx-target="closest tr"
+          hx-swap="outerHTML">
+          ✕
+        </button>
+      {% endif %}
+    </div>
+  </td>
+</tr>

@@ -1,0 +1,25 @@
+{% if errors is None %}
+  <p class="text-sm text-gray-400 italic">Skipped-items file not available.</p>
+{% elif not errors %}
+  <p class="text-sm text-gray-400 italic">No items were skipped.</p>
+{% else %}
+  <p class="text-sm text-gray-500 mb-4">
+    {{ errors|length }} item{{ errors|length|pluralize }} skipped during conversion — fix the source data and resubmit to recover them.
+  </p>
+  <table class="w-full text-xs">
+    <thead>
+      <tr class="text-left text-gray-400 uppercase tracking-wider">
+        <th class="py-1 pr-3 w-20">Position</th>
+        <th class="py-1">Reason</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for item in errors %}
+        <tr>
+          <td class="py-2 pr-3 font-mono text-gray-700 align-top">{{ item.position }}</td>
+          <td class="py-2 font-mono text-amber-700 break-all">{{ item.error }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}

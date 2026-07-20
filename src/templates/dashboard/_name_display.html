@@ -1,0 +1,18 @@
+<div id="template-name-block">
+  <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+    {% if template.editable %}
+      <input
+        type="text" name="name" value="{{ template.name }}"
+        hx-post="/templates/{{ template.id }}/name/"
+        hx-trigger="change, keyup[key=='Enter']"
+        hx-target="#template-name-block"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        class="text-xl font-bold text-gray-900 bg-transparent border-b-2 border-transparent hover:border-gray-300 focus:border-indigo-400 focus:outline-none px-0 py-0.5">
+    {% else %}
+      {{ template.name }}
+    {% endif %}
+    {% include "dashboard/_saved_flash.html" %}
+  </h1>
+  {% include "dashboard/_field_error.html" %}
+</div>

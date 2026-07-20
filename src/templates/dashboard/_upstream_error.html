@@ -1,0 +1,18 @@
+{% extends "dashboard/_base.html" %}
+
+{% block title %}Something went wrong{% endblock %}
+
+{% block content %}
+  <div class="flex-1 flex items-center justify-center">
+    <div class="text-center max-w-sm">
+      <h1 class="text-lg font-semibold text-gray-900">Something went wrong</h1>
+      <p class="mt-2 text-sm text-gray-500">
+        We couldn't reach the transformation service. Please try again in a moment.
+      </p>
+      <a href="/"
+        class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700">
+        Back to dashboard
+      </a>
+    </div>
+  </div>
+{% endblock %}

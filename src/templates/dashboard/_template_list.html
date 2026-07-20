@@ -1,0 +1,60 @@
+<div id="template-list-wrap" class="bg-white rounded-xl border border-gray-200 shadow-sm">
+
+  <!-- Filter bar -->
+  <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+    <h2 class="text-sm font-semibold text-gray-700">Your templates</h2>
+    <div class="flex items-center gap-3">
+      <button
+        hx-get="/templates/new/"
+        hx-target="#template-modal-body"
+        hx-swap="innerHTML"
+        hx-on::after-request="document.getElementById('template-modal').showModal()"
+        class="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors">
+        {% include "dashboard/_icon.html" with name="plus" icon_class="w-4 h-4" %}
+        New template
+      </button>
+      <label class="text-xs text-gray-400">Status</label>
+      <input type="hidden" name="ordering" value="{{ ordering }}">
+      <select name="status"
+        hx-get="/templates/" hx-target="#template-list-wrap" hx-swap="outerHTML" hx-push-url="true"
+        hx-trigger="change" hx-include="[name='ordering']"
+        class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700
+               focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+        <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+        <option value="DRAFT" {% if status_filter == "DRAFT" %}selected{% endif %}>Draft</option>
+        <option value="PUBLISHED" {% if status_filter == "PUBLISHED" %}selected{% endif %}>Published</option>
+        <option value="DEPRECATED" {% if status_filter == "DEPRECATED" %}selected{% endif %}>Deprecated</option>
+      </select>
+    </div>
+  </div>
+
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-gray-50 border-b border-gray-200">
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="name" label="Name" base_url="/templates/" target="#template-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="format" label="Format" base_url="/templates/" target="#template-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="version" label="Version" base_url="/templates/" target="#template-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {% include "dashboard/_sortable_th.html" with field="status" label="Status" base_url="/templates/" target="#template-list-wrap" %}
+        </th>
+        <th class="px-4 py-3 w-24"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for t in templates %}
+        {% include "dashboard/_template_row.html" with t=t active_id=active_id %}
+      {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-400 italic">No mappings found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>

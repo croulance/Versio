@@ -1,0 +1,185 @@
+<!-- OOB: update modal title -->
+<span id="field-modal-title" hx-swap-oob="true">
+  {% if field %}Edit: {{ field.path }}{% elif fixed_parent %}Add field under {{ fixed_parent.path }}{% else %}Add source field{% endif %}
+</span>
+
+<form
+  {% if field %}
+    hx-post="/templates/{{ template_id }}/fields/{{ field.id }}/edit/"
+  {% else %}
+    hx-post="/templates/{{ template_id }}/fields/add/"
+  {% endif %}
+  hx-target="#source-fields-body"
+  hx-swap="outerHTML"
+  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+  class="space-y-5">
+
+  {% if field and parent_path %}
+    <p class="text-xs text-gray-400 -mt-1">Nested under <code class="bg-gray-100 px-1 rounded font-mono">{{ parent_path }}</code> — not editable after creation.</p>
+  {% elif fixed_parent %}
+    <p class="text-xs text-gray-400 -mt-1">Nested under <code class="bg-gray-100 px-1 rounded font-mono">{{ fixed_parent.path }}</code></p>
+    <input type="hidden" name="parent_id" value="{{ fixed_parent.id }}">
+  {% endif %}
+
+  <!-- Basic -->
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">Name <span class="text-red-500">*</span></label>
+      <input
+        type="text" name="name" value="{{ field.name|default:'' }}"
+        placeholder="field_name" required
+        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">Type <span class="text-red-500">*</span></label>
+      <select id="sf-field-type" name="field_type"
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+        {% for ft in field_types %}
+          <option value="{{ ft }}" {% if field.field_type == ft %}selected{% endif %}>{{ ft }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input type="checkbox" name="required"
+        {% if field.required or not field %}checked{% endif %}
+        class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+      <span class="text-sm text-gray-700 font-medium">Required</span>
+      <span class="text-xs text-gray-400">— item rejected if absent</span>
+    </label>
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input type="checkbox" name="nullable"
+        {% if field.nullable %}checked{% endif %}
+        class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+      <span class="text-sm text-gray-700 font-medium">Nullable</span>
+      <span class="text-xs text-gray-400">— value may be null</span>
+    </label>
+  </div>
+
+  <div>
+    <label class="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+    <input type="text" name="description" value="{{ field.description|default:'' }}"
+      placeholder="Optional description"
+      class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">Order</label>
+      <input type="number" name="order" value="{{ field.order|default:0 }}" min="0"
+        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">
+        Default value
+        <span class="font-normal text-gray-400">(JSON — used when not required)</span>
+      </label>
+      <input type="text" name="default_value" value="{{ default_value_json }}"
+        placeholder='null, "text", 42, true …'
+        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+  </div>
+
+  <!-- String constraints -->
+  <div id="sf-section-string" class="border-t border-gray-100 pt-4">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      String constraints
+    </p>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Max length</label>
+        <input type="number" name="max_length" value="{{ field.max_length|default:'' }}" min="1"
+          placeholder="unlimited"
+          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">
+          Allowed values
+          <span class="font-normal text-gray-400">(one per line = enum)</span>
+        </label>
+        <textarea name="allowed_values" rows="3"
+          placeholder="value1&#10;value2&#10;value3"
+          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ allowed_values_text }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Numeric constraints -->
+  <div id="sf-section-numeric" class="border-t border-gray-100 pt-4">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      Numeric constraints
+    </p>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Min value</label>
+        <input type="number" step="any" name="min_value" value="{{ field.min_value|default:'' }}"
+          placeholder="no minimum"
+          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 mb-1">Max value</label>
+        <input type="number" step="any" name="max_value" value="{{ field.max_value|default:'' }}"
+          placeholder="no maximum"
+          class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+      </div>
+    </div>
+  </div>
+
+  <!-- Date constraints -->
+  <div id="sf-section-date" class="border-t border-gray-100 pt-4">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      Date format
+    </p>
+    <input type="text" name="date_format" value="{{ field.date_format|default:'' }}"
+      placeholder="%Y-%m-%d  (blank = ISO 8601)"
+      class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <p class="text-xs text-gray-400 mt-1">Python <code class="bg-gray-100 px-1 rounded">strptime</code> format. Leave blank to accept ISO 8601.</p>
+  </div>
+
+  <!-- Object hint -->
+  <div id="sf-section-object" class="border-t border-gray-100 pt-4">
+    <p class="text-xs text-gray-400">
+      To describe this object's shape for validation, save it first, then use the
+      <span class="font-medium text-gray-500">+</span> button on its row to add each nested key.
+      An object with no children is accepted as an unvalidated blob, as before.
+    </p>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 sf-actions">
+    <button
+      type="button"
+      onclick="document.getElementById('field-modal').close()"
+      class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+      {% if field %}Save changes{% else %}Add field{% endif %}
+    </button>
+  </div>
+
+
+<script>
+(function () {
+  var STRING_TYPES  = new Set(['string', 'email', 'url']);
+  var NUMERIC_TYPES = new Set(['number', 'integer']);
+  var DATE_TYPES    = new Set(['date', 'datetime']);
+
+  function update(type) {
+    document.getElementById('sf-section-string').style.display  = STRING_TYPES.has(type)  ? '' : 'none';
+    document.getElementById('sf-section-numeric').style.display = NUMERIC_TYPES.has(type) ? '' : 'none';
+    document.getElementById('sf-section-date').style.display    = DATE_TYPES.has(type)    ? '' : 'none';
+    document.getElementById('sf-section-object').style.display  = type === 'object'       ? '' : 'none';
+  }
+
+  var sel = document.getElementById('sf-field-type');
+  update(sel.value);
+  sel.addEventListener('change', function () { update(this.value); });
+})();
+</script>
+
+</form>

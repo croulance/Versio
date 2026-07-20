@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Submit Transformation</h1>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert {{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" id="submit-transform-form">
+  {% csrf_token %}
+  <fieldset class="module aligned">
+    <div class="form-row">
+      <label for="template_id">Template:</label>
+      <select name="template_id" id="template_id" required>
+        <option value="">---------</option>
+        {% for template in templates %}
+          <option value="{{ template.id }}" data-supplier-account-id="{{ template.supplier.supplier_account_id }}">
+            {{ template.supplier.name }} — {{ template.name }} ({{ template.format|upper }} v{{ template.version }})
+          </option>
+        {% endfor %}
+      </select>
+      <p class="help" style="margin-left:0;color:#888;font-size:12px">
+        Only PUBLISHED templates are eligible for submission.
+      </p>
+    </div>
+    <input type="hidden" name="supplier_account_id" id="supplier_account_id">
+    <div class="form-row">
+      <label for="file">Input File (JSON):</label>
+      <input type="file" name="file" id="file" accept=".json" required>
+    </div>
+  </fieldset>
+  <div class="submit-row">
+    <input type="submit" value="Submit" class="default">
+  </div>
+</form>
+
+<script>
+  (function () {
+    var templateSelect = document.getElementById("template_id");
+    var supplierField = document.getElementById("supplier_account_id");
+    var form = document.getElementById("submit-transform-form");
+
+    function syncSupplier() {
+      var opt = templateSelect.options[templateSelect.selectedIndex];
+      supplierField.value = opt ? (opt.getAttribute("data-supplier-account-id") || "") : "";
+    }
+
+    templateSelect.addEventListener("change", syncSupplier);
+    form.addEventListener("submit", syncSupplier);
+    syncSupplier();
+  })();
+</script>
+{% endblock %}

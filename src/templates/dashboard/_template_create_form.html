@@ -1,0 +1,46 @@
+<form
+  hx-post="/templates/new/"
+  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+  class="space-y-5">
+
+  <div>
+    <label class="block text-xs font-semibold text-gray-500 mb-1">Name <span class="text-red-500">*</span></label>
+    <input
+      type="text" name="name" placeholder="e.g. Property listings" value="{{ name|default:'' }}"
+      required autofocus
+      class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">Format <span class="text-red-500">*</span></label>
+      <select name="format" required
+        class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+        {% for f in formats %}
+          <option value="{{ f }}" {% if f == format %}selected{% endif %}>{{ f|upper }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 mb-1">Version</label>
+      <input type="number" name="version" value="{{ version|default:1 }}" min="1"
+        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    </div>
+  </div>
+
+  {% include "dashboard/_field_error.html" %}
+
+  <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+    <button
+      type="button"
+      onclick="document.getElementById('template-modal').close()"
+      class="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+      Create template
+    </button>
+  </div>
+</form>

@@ -1,0 +1,91 @@
+{% with depth=depth|default:0 %}
+<tr id="field-row-{{ field.id }}" class="hover:bg-gray-50 group">
+  <td class="px-4 py-3 font-mono text-gray-800 font-medium text-sm">
+    <span style="display:inline-block; width: {{ depth }}em;"></span>
+    {% if depth > 0 %}<span class="text-gray-300">↳</span>{% endif %}
+    {{ field.name }}
+  </td>
+  <td class="px-4 py-3">
+    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+      {% if field.field_type == 'string' %}bg-blue-50 text-blue-700
+      {% elif field.field_type == 'number' or field.field_type == 'integer' %}bg-purple-50 text-purple-700
+      {% elif field.field_type == 'boolean' %}bg-yellow-50 text-yellow-700
+      {% elif field.field_type == 'date' or field.field_type == 'datetime' %}bg-pink-50 text-pink-700
+      {% elif field.field_type == 'geojson' %}bg-green-50 text-green-700
+      {% else %}bg-gray-100 text-gray-600{% endif %}">
+      {{ field.field_type }}
+    </span>
+  </td>
+  <td class="px-4 py-3 text-center">
+    {% if field.required %}
+      <span class="inline-block w-4 h-4 rounded-full bg-green-100 text-green-600 text-xs leading-4 text-center">✓</span>
+    {% else %}
+      <span class="inline-block w-4 h-4 rounded-full bg-gray-100 text-gray-400 text-xs leading-4 text-center">–</span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-3 text-center">
+    {% if field.nullable %}
+      <span class="inline-block w-4 h-4 rounded-full bg-orange-50 text-orange-500 text-xs leading-4 text-center">✓</span>
+    {% else %}
+      <span class="inline-block w-4 h-4 rounded-full bg-gray-100 text-gray-400 text-xs leading-4 text-center">–</span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-3 text-xs text-gray-500 space-x-1">
+    {% if field.max_length %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">max {{ field.max_length }}</span>
+    {% endif %}
+    {% if field.allowed_values %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">enum({{ field.allowed_values|length }})</span>
+    {% endif %}
+    {% if field.min_value is not None and field.min_value != '' %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">≥{{ field.min_value }}</span>
+    {% endif %}
+    {% if field.max_value is not None and field.max_value != '' %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">≤{{ field.max_value }}</span>
+    {% endif %}
+    {% if field.date_format %}
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono">{{ field.date_format }}</span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-3 text-gray-400 text-xs truncate max-w-xs">{{ field.description }}</td>
+  <td class="px-4 py-3">
+    {% if editable|default:True %}
+    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {% if field.field_type == 'object' %}
+      <button
+        title="Add nested field"
+        class="p-1.5 rounded hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors"
+        hx-get="/templates/{{ template_id }}/fields/add/?parent_id={{ field.id }}"
+        hx-target="#field-modal-body"
+        hx-swap="innerHTML"
+        hx-on::after-request="document.getElementById('field-modal').showModal()">
+        {% include "dashboard/_icon.html" with name="plus" icon_class="w-3.5 h-3.5" %}
+      </button>
+      {% endif %}
+      <button
+        title="Edit"
+        class="p-1.5 rounded hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors"
+        hx-get="/templates/{{ template_id }}/fields/{{ field.id }}/edit/"
+        hx-target="#field-modal-body"
+        hx-swap="innerHTML"
+        hx-on::after-request="document.getElementById('field-modal').showModal()">
+        {% include "dashboard/_icon.html" with name="pencil" icon_class="w-3.5 h-3.5" %}
+      </button>
+      <button
+        title="Delete"
+        class="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+        hx-post="/templates/{{ template_id }}/fields/{{ field.id }}/delete/"
+        hx-target="#field-row-{{ field.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete field '{{ field.path }}'?"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+        {% include "dashboard/_icon.html" with name="trash" icon_class="w-3.5 h-3.5" %}
+      </button>
+    </div>
+    {% endif %}
+  </td>
+</tr>
+{% for child in field.children %}
+  {% include "dashboard/_source_field_row.html" with field=child template_id=template_id editable=editable depth=depth|add:1 %}
+{% endfor %}
+{% endwith %}
