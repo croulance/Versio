@@ -174,6 +174,7 @@ class JobView(InternalAPIView):
             "template_name": job.template.name,
             "template_version": job.template.version,
             "source_path": job.source_path,
+            "total_items": job.total_items,
             "total_chunks": job.total_chunks,
             "chunk_size": job.chunk_size,
             "processed_chunks": job.processed_chunks,

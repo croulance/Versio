@@ -39,6 +39,7 @@ class JobReportSerializer(serializers.Serializer):
     template_name = serializers.CharField(allow_null=True)
     template_version = serializers.IntegerField()
     source_path = serializers.CharField(allow_blank=True)
+    total_items = serializers.IntegerField()
     total_chunks = serializers.IntegerField()
     chunk_size = serializers.IntegerField()
     processed_chunks = serializers.IntegerField()

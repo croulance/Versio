@@ -203,6 +203,13 @@ class TransformationJob(models.Model):
         max_length=16, choices=Status.choices, default=Status.PENDING
     )
     total_chunks = models.IntegerField(default=0)
+    # Total item count this job should process -- computed once at submission
+    # time (the same ijson pass that decides chunk_size) but, until now, never
+    # actually stored anywhere: job details had total_chunks/processed_chunks
+    # but no baseline to say how many *items* the job represents, so a
+    # supplier had no way to tell "3 skipped" apart from "3 skipped out of 10"
+    # vs "3 skipped out of 40,000".
+    total_items = models.IntegerField(default=0)
     # Items per chunk, computed once at submission time from total_items via the
     # dynamic chunk-size heuristic (see utils/chunking.py) and fixed for this job's
     # lifetime — retry must reconstruct the exact same [start, end] ranges it

@@ -21,6 +21,7 @@ class JobRepository(JobRepositoryInterface):
         source_path: str,
         total_chunks: int,
         chunk_size: int,
+        total_items: int = 0,
     ) -> TransformationJob:
         return TransformationJob.objects.create(
             supplier_id=supplier_id,
@@ -30,6 +31,7 @@ class JobRepository(JobRepositoryInterface):
             source_path=source_path,
             total_chunks=total_chunks,
             chunk_size=chunk_size,
+            total_items=total_items,
             status=TransformationJob.Status.PENDING,
         )
 

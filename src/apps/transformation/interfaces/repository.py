@@ -189,6 +189,7 @@ class JobRepositoryInterface(ABC):
         source_path: str,
         total_chunks: int,
         chunk_size: int,
+        total_items: int = 0,
     ): ...
 
     @abstractmethod

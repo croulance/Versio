@@ -272,6 +272,7 @@ class TestTransformationServiceSubmit:
         assert job_repo.created_with["format"] == "csv"
         assert job_repo.created_with["source_path"] == "data.items.item"
         assert job_repo.created_with["total_chunks"] == 1  # 3 items << CHUNK_SIZE_MIN
+        assert job_repo.created_with["total_items"] == 3
         assert storage.uploaded  # source file was uploaded
         assert cache.resolve_idempotency_calls  # idempotency key resolved after success
         assert cache.release_idempotency_calls == []  # never released on success

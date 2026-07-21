@@ -82,7 +82,7 @@
   {% if job.total_chunks %}
   <div class="border-t border-gray-100 pt-5">
     <div class="flex justify-between text-xs text-gray-500 mb-1">
-      <span>{{ job.processed_chunks }} / {{ job.total_chunks }} chunks</span>
+      <span>{{ job.processed_chunks }} / {{ job.total_chunks }} chunks &middot; {{ job.total_items }} item{{ job.total_items|pluralize }} total</span>
       <span>{{ job.progress_pct|floatformat:0 }}%</span>
     </div>
     <div class="w-full bg-gray-100 rounded-full h-2">

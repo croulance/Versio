@@ -130,6 +130,7 @@ class TransformationService:
                 source_path=source_path,
                 total_chunks=total_chunks,
                 chunk_size=chunk_size,
+                total_items=total_items,
             )
 
             self._cache.resolve_idempotency(
